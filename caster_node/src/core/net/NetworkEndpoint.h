@@ -7,6 +7,6 @@
 
 #include "boost/asio.hpp"
 
-typedef boost::asio::ip::basic_endpoint<boost::asio::ip::tcp> NetworkInterface;
+typedef boost::asio::ip::basic_endpoint<boost::asio::ip::tcp> NetworkEndpoint;
 
 #endif //CASTER_NODE_NETWORKINTERFACE_H

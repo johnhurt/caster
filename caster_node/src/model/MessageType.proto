@@ -1,0 +1,12 @@
+/// Enumeration of the Message Types used by caster.  These are just the top
+/// level types, more specific message types are given by a combination of the
+/// type and the subtype
+enum MessageType {
+    Empty = 0;
+
+    // Info Commands
+    Describe = 100;
+
+    // Cluster Control Commands
+    JoinLocal = 200;
+}

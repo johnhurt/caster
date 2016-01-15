@@ -1,0 +1,7 @@
+/// Enumeration of message subtypes
+enum MessageSubtype {
+    None = 0;
+    Request = 1;
+    Response = 2;
+    Error = 3;
+}

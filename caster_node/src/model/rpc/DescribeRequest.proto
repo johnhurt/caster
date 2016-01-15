@@ -1,0 +1,3 @@
+message DescribeRequest {
+    required bool verbose = 1;
+}

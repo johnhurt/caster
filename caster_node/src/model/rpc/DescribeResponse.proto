@@ -1,0 +1,4 @@
+message DescribeResponse {
+    required bool verbose = 1;
+    required string description = 2;
+}

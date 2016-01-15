@@ -1,13 +1,24 @@
+#include <core/CasterNodeOptionParser.h>
 #include "core/CasterNodeMain.h"
 
 
-int main(int argc, const char *const *const argv)
+int main(int argc, char * * argv)
 {
-    std::vector<std::string> args;
+    CasterNodeConfig config;
 
-    for (int i = 0; i < argc; i++) {
-        args.push_back(argv[i]);
+    try
+    {
+        config = CasterNodeOptionParser::parseCommandLine(argc, argv);
+    }
+    catch(std::exception& e) {
+         //The excetption should already be handled
+        return 1;
     }
 
-    return CasterNodeMain(args).exitCode();
+    CasterNodeMain caster(config);
+
+    caster.start();
+    caster.join();
+
+    return caster.exitCode();
 }

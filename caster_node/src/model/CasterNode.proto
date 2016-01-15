@@ -1,0 +1,5 @@
+import "CasterNodeConfig.proto";
+
+message CasterNode {
+    required CasterNodeConfig config = 1;
+}

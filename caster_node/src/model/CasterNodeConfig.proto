@@ -1,0 +1,36 @@
+import "ServiceAddress.proto";
+
+/// Representation of an object encapsulating the command-line arguments for
+/// starting a caster node
+message CasterNodeConfig {
+
+    /// Indicates whether this node was started as a seed for the cluster
+    required bool seed = 1;
+
+    /// Indicates whether this node was started as a seed for a remote cluster
+    /// that is bound to an existing cluster
+    required bool remote_seed = 2;
+
+    /// List of hosts in the cluster being joined; only the first reachable
+    /// node in this list will be used
+    required ServiceAddress peer_address = 3;
+
+    /// Port on which this node will listen for rpc communication between nodes
+    /// regarding cluster organization
+    required int32 chatter_port = 4;
+
+    /// Hostname of the network interface this node will use for communicating
+    /// with other nodes in the cluster that are not remote
+    required string internal_interface = 5;
+
+    /// Hostname of the network interface this node will use for communicating
+    /// with other services and clients not considered part of the cluster.
+    required string external_interface = 6;
+
+    /// Hostname of the network interface this node will use for communicating
+    /// with remote nodes in the cluster.
+    required string remote_interface = 7;
+
+    /// List of ports that this node can listen on for any network communication
+    repeated int32 owned_port = 8 [packed=true];
+}

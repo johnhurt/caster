@@ -1,0 +1,2 @@
+/// An empty message as the default value for TypedMessage's type
+message EmptyMessage {}

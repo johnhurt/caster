@@ -7,9 +7,9 @@
 
 using namespace boost;
 
-NetworkInterface HostResolver::resolve(std::string const& hostname)
+NetworkEndpoint HostResolver::resolve(std::string const& hostname)
 {
-    NetworkInterface bestResult;
+    NetworkEndpoint bestResult;
 
     bool resultFound(false);
     bool isIpv6(false);
@@ -18,11 +18,11 @@ NetworkInterface HostResolver::resolve(std::string const& hostname)
     asio::ip::tcp::resolver resolver(io_service);
     asio::ip::tcp::resolver::query query(hostname,"");
 
-    for(asio::ip::tcp::resolver::iterator i = resolver.resolve(query);
-            i != asio::ip::tcp::resolver::iterator();
-            ++i)
+    for(asio::ip::tcp::resolver::iterator i = resolver.resolve(query)
+            ; i != asio::ip::tcp::resolver::iterator()
+            ; ++i)
     {
-        NetworkInterface currResult = i->endpoint();
+        NetworkEndpoint currResult = i->endpoint();
 
         if (!resultFound)
         {
@@ -39,14 +39,13 @@ NetworkInterface HostResolver::resolve(std::string const& hostname)
     return bestResult;
 }
 
-std::string HostResolver::resolve(NetworkInterface const &networkInterface)
+std::string HostResolver::resolve(NetworkEndpoint const &networkEndpoint)
 {
     asio::io_service io_service;
     asio::ip::tcp::resolver resolver(io_service);
 
-    for(asio::ip::tcp::resolver::iterator i = resolver.resolve(networkInterface)
-            ; i != asio::ip::tcp::resolver::iterator()
-            ; ++i)
+    for(asio::ip::tcp::resolver::iterator i = resolver.resolve(networkEndpoint)
+            ; i != asio::ip::tcp::resolver::iterator(); )
     {
         return boost::algorithm::to_lower_copy(i->host_name());
     }
@@ -54,3 +53,24 @@ std::string HostResolver::resolve(NetworkInterface const &networkInterface)
     return "";
 }
 
+bool HostResolver::isLocalInterface(const std::string &hostname)
+{
+    return isLocalInterface(resolve(hostname));
+}
+
+bool HostResolver::isLocalInterface(NetworkEndpoint const &endpoint)
+{
+    asio::io_service io_service;
+
+    NetworkEndpoint ep(endpoint.address(), 55555);
+
+    try
+    {
+        asio::ip::tcp::acceptor acceptor(io_service, ep);
+    }
+    catch(system::system_error & e) {
+        return false;
+    }
+
+    return true;
+}
