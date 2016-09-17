@@ -1,29 +1,20 @@
 #define BOOST_TEST_NO_MAIN ProgramOptionsTest
 #include <boost/test/unit_test.hpp>
-#include <boost/algorithm/string/case_conv.hpp>
 
 #include <core/net/HostResolver.h>
 #include <core/CasterNodeMain.h>
 #include <core/CasterNodeOptionParser.h>
 
-/**
- * Get the basic options for caster_node along with additional options specific
- * for the test
- */
-std::vector<std::string> getBasicOptions(std::vector<std::string> extraOpts) {
-    std::vector<std::string> result = { "-s", "-i", "localhost" };
+#include "TestUtils.hpp"
 
-    result.insert(result.end(), extraOpts.begin(), extraOpts.end());
+BOOST_FIXTURE_TEST_SUITE(programOptionsTests, BasicOptionsFixture)
 
-    return result;
-}
 
-BOOST_AUTO_TEST_CASE( testPortUsageParsing )
-{
-
+    BOOST_AUTO_TEST_CASE(testMaxDefaultOptions)
     {
         CasterNodeConfig config = CasterNodeOptionParser::parseCommandLine(
                 getBasicOptions({}));
+
         BOOST_CHECK_EQUAL(config.chatter_port(), 3130);
 
         int ownedPorts[] = {
@@ -39,12 +30,14 @@ BOOST_AUTO_TEST_CASE( testPortUsageParsing )
                 , 3140
         };
 
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 10; i++)
+        {
             BOOST_CHECK_EQUAL(
                     config.owned_port(i), ownedPorts[i]);
         }
     }
 
+    BOOST_AUTO_TEST_CASE(testSetChatterPort)
     {
         CasterNodeConfig config = CasterNodeOptionParser::parseCommandLine(
                 getBasicOptions({"--chatter-port", "2041"}));
@@ -63,12 +56,14 @@ BOOST_AUTO_TEST_CASE( testPortUsageParsing )
                 , 3140
         };
 
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 10; i++)
+        {
             BOOST_CHECK_EQUAL(
                     config.owned_port(i), ownedPorts[i]);
         }
     }
 
+    BOOST_AUTO_TEST_CASE(testSetOwnedPortsSimple)
     {
         CasterNodeConfig config = CasterNodeOptionParser::parseCommandLine(
                 getBasicOptions({"--owned-ports", "2042-2052"}));
@@ -88,13 +83,14 @@ BOOST_AUTO_TEST_CASE( testPortUsageParsing )
                 , 2052
         };
 
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 10; i++)
+        {
             BOOST_CHECK_EQUAL(
                     config.owned_port(i), ownedPorts[i]);
         }
     }
 
-
+    BOOST_AUTO_TEST_CASE(testSetOwnedPortsShortOption)
     {
         CasterNodeConfig config = CasterNodeOptionParser::parseCommandLine(
                 getBasicOptions({"-o", "2042-2052"}));
@@ -114,12 +110,14 @@ BOOST_AUTO_TEST_CASE( testPortUsageParsing )
                 , 2052
         };
 
-        for (int i = 0; i < 11; i++) {
+        for (int i = 0; i < 11; i++)
+        {
             BOOST_CHECK_EQUAL(
                     config.owned_port(i), ownedPorts[i]);
         }
     }
 
+    BOOST_AUTO_TEST_CASE(testSetChatterPortAndComplexOwnedPorts)
     {
         CasterNodeConfig config = CasterNodeOptionParser::parseCommandLine(
                 getBasicOptions({"-c", "2041", "-o"
@@ -139,33 +137,14 @@ BOOST_AUTO_TEST_CASE( testPortUsageParsing )
                 , 3142
         };
 
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 10; i++)
+        {
             BOOST_CHECK_EQUAL(
                     config.owned_port(i), ownedPorts[i]);
         }
     }
 
-}
-
-/**
- * Get the basic options for caster_node along with additional options specific
- * for the test
- */
-std::vector<std::string> getBasicOptionsNoNet(
-        std::vector<std::string> extraOpts) {
-
-    std::vector<std::string> result = { "-s" };
-
-    result.insert(result.end(), extraOpts.begin(), extraOpts.end());
-
-    return result;
-}
-
-BOOST_AUTO_TEST_CASE( testinterfaceSpecification )
-{
-    std::string currHostname = boost::algorithm::to_lower_copy(
-            boost::asio::ip::host_name());
-
+    BOOST_AUTO_TEST_CASE(testUseLocalInterfacePropagation)
     {
         CasterNodeConfig config = CasterNodeOptionParser::parseCommandLine(
                 getBasicOptionsNoNet({"-i", "localhost"}));
@@ -178,7 +157,7 @@ BOOST_AUTO_TEST_CASE( testinterfaceSpecification )
                 config.remote_interface()).address().is_loopback());
     }
 
-    {
+    BOOST_AUTO_TEST_CASE( testUseCurrentHostnamePropagation ) {
         CasterNodeConfig config = CasterNodeOptionParser::parseCommandLine(
                 getBasicOptionsNoNet({"-i", currHostname.c_str()}));
 
@@ -197,7 +176,7 @@ BOOST_AUTO_TEST_CASE( testinterfaceSpecification )
                 config.remote_interface())), currHostname);
     }
 
-    {
+    BOOST_AUTO_TEST_CASE( testUseHostnameForInternalAndLocalForExternal ) {
         CasterNodeConfig config = CasterNodeOptionParser::parseCommandLine(
                 getBasicOptionsNoNet({
                         "-i", currHostname.c_str()
@@ -215,7 +194,7 @@ BOOST_AUTO_TEST_CASE( testinterfaceSpecification )
                 config.internal_interface())), currHostname);
     }
 
-    {
+    BOOST_AUTO_TEST_CASE( testUseLocalForInternalAndHostnameForRemote ) {
         CasterNodeConfig config = CasterNodeOptionParser::parseCommandLine(
                 getBasicOptionsNoNet({
                         "-i", "localhost"
@@ -233,7 +212,7 @@ BOOST_AUTO_TEST_CASE( testinterfaceSpecification )
                 config.remote_interface())), currHostname);
     }
 
-    {
+    BOOST_AUTO_TEST_CASE( testInvalidInterface ) {
         try
         {
             CasterNodeConfig config = CasterNodeOptionParser::parseCommandLine(
@@ -242,7 +221,7 @@ BOOST_AUTO_TEST_CASE( testinterfaceSpecification )
                     "an exception");
         }
         catch(std::exception& ex){}
-
     }
 
-}
+
+BOOST_AUTO_TEST_SUITE_END()

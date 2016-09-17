@@ -7,8 +7,24 @@
 
 #include <boost/asio.hpp>
 #include <core/rpc/DescribeHandler.h>
+#include <core/rpc/AppendRaftEntriesHandler.h>
+#include <core/rpc/RequestRaftVoteHandler.h>
 #include "TypedMessage.hpp"
 #include <memory>
+
+#define DECLARE_HANDLER_FOR(T) T ## Handler handlerFor ## T;
+
+#define WRITE_HANDLER_CASE_FOR(T) \
+        case T: { \
+            T ## Request request; \
+            request.ParseFromArray(&messageBuffer[0], requestSize); \
+            T ## RpcResponse response \
+                    = handlerFor ## T.handleRequest(request); \
+            responseBuffer = response.buffer(); \
+            break; \
+        }
+
+#define CONSTRUCT_HANDLER_FOR(T, ...) handlerFor ## T(__VA_ARGS__)
 
 class ChatterServerClient
 : public std::enable_shared_from_this<ChatterServerClient>
@@ -21,11 +37,14 @@ private:
     int requestType;
     int requestSize;
 
-    DescribeHandler describeHandler;
+    DECLARE_HANDLER_FOR(Describe);
+    DECLARE_HANDLER_FOR(AppendRaftEntries);
+    DECLARE_HANDLER_FOR(RequestRaftVote);
 
 public:
 
-    ChatterServerClient(boost::asio::ip::tcp::socket socket);
+    ChatterServerClient(boost::asio::ip::tcp::socket socket
+            , RaftNode& raftNode);
     virtual ~ChatterServerClient();
 
     boost::asio::ip::tcp::socket& socket();
@@ -36,8 +55,9 @@ protected:
 
     void handleRequestHeader();
 
-    void handleRequest();
+    void handleRequestBody();
 
+    void handleRequest(MessageBuffer& responseBuffer);
 };
 
 

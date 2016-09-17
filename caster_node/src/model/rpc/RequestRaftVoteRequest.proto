@@ -1,0 +1,8 @@
+message RequestRaftVoteRequest {
+
+    required int32 candidateId = 1;
+    required int32 term = 2;
+    required int32 lastLogIndex = 3;
+    required int32 lastLogTerm = 4;
+
+}

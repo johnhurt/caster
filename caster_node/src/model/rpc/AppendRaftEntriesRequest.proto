@@ -1,0 +1,10 @@
+import "LogEntry.proto";
+
+message AppendRaftEntriesRequest {
+    required int32 term = 1;
+    required int32 leader_id = 2;
+    required int32 prev_log_index = 3;
+    required int32 prev_log_term = 4;
+    required int32 commit_index = 5;
+    repeated LogEntry log_entry = 6;
+}

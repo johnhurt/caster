@@ -4,18 +4,18 @@
 
 #include <core/net/HostResolver.h>
 #include "ChatterServer.h"
-#include <utility>
 
 using namespace boost::asio;
 
-ChatterServer::ChatterServer(CasterNodeConfig &currentNodeConfig
-        , boost::asio::io_service& ioService)
+ChatterServer::ChatterServer(boost::asio::io_service& ioService
+        , CasterNode& localNode)
 : ioService(ioService)
-, _currentNodeConfig(currentNodeConfig)
+, _localNode(localNode)
 , acceptor(ioService, NetworkEndpoint(
-        HostResolver::resolve(currentNodeConfig.internal_interface()).address()
-        , currentNodeConfig.chatter_port()))
+        HostResolver::resolve(localNode.config().internal_interface()).address()
+        , localNode.config().chatter_port()))
 , socket(ioService)
+, raftNode(ioService, localNode.config().seed())
 {
 
 }
@@ -37,7 +37,8 @@ void ChatterServer::doAccept()
 
         if (!error)
         {
-            std::make_shared<ChatterServerClient>(std::move(socket))->start();
+            std::make_shared<ChatterServerClient>(std::move(socket)
+                    , raftNode)->start();
         }
 
         doAccept();
@@ -46,5 +47,18 @@ void ChatterServer::doAccept()
 
 void ChatterServer::start()
 {
+    // If this is the seed node, the list of nodes in the cluster is just this
+    // node.   Ask the existing cluster to join, and get the new set of nodes
+    if (!_localNode.config().seed()) {
+
+    }
+
+    raftNode.start();
     doAccept();
+}
+
+void ChatterServer::stop()
+{
+    acceptor.cancel();
+    raftNode.stop();
 }

@@ -7,9 +7,13 @@
 #include <boost/bind.hpp>
 
 ChatterServerClient::ChatterServerClient(
-        boost::asio::ip::tcp::socket socket)
+        boost::asio::ip::tcp::socket socket
+        , RaftNode& raftNode)
 : _socket(std::move(socket))
 , headerBuffer(TypedMessageUtil::HEADER_LENGTH)
+, CONSTRUCT_HANDLER_FOR(Describe)
+, CONSTRUCT_HANDLER_FOR(AppendRaftEntries, raftNode)
+, CONSTRUCT_HANDLER_FOR(RequestRaftVote, raftNode)
 {
 
 }
@@ -53,31 +57,33 @@ void ChatterServerClient::handleRequestHeader()
             boost::asio::buffer(&messageBuffer[0], requestSize)
             , [this, self](boost::system::error_code err, std::size_t length) {
                 if (!err) {
-                    handleRequest();
+                    handleRequestBody();
                 }
             });
 
 }
 
-void ChatterServerClient::handleRequest()
+void ChatterServerClient::handleRequestBody()
 {
-
     MessageBuffer responseBuffer;
 
-    switch(requestType) {
-    case Describe: {
-        DescribeRequest request;
-        request.ParseFromArray(&messageBuffer[0], requestSize);
-        DescribeRpcResponse response = describeHandler.handleRequest(request);
-        responseBuffer = response.buffer();
-        break;
-    }
-    }
+    handleRequest(responseBuffer);
 
     boost::asio::write(_socket, boost::asio::buffer(responseBuffer));
 }
 
+
+void ChatterServerClient::handleRequest(MessageBuffer &responseBuffer)
+{
+
+    switch(requestType) {
+        WRITE_HANDLER_CASE_FOR(Describe)
+        WRITE_HANDLER_CASE_FOR(AppendRaftEntries)
+        WRITE_HANDLER_CASE_FOR(RequestRaftVote)
+    }
+
+}
+
 ChatterServerClient::~ChatterServerClient()
 {
-    int j = 0;
 }

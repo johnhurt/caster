@@ -10,6 +10,7 @@
 #include <CasterNodeConfig.pb.h>
 #include "CasterNode.pb.h"
 #include "ChatterServer.h"
+#include "StorageManager.h"
 
 /**
  * EntryPoint to the
@@ -35,6 +36,7 @@ private:
     CasterNodeConfig _config;
     CasterNode _localNode;
     ChatterServer _chatterServer;
+    StorageManager _storageManager;
     int _exitCode;
 
 public:

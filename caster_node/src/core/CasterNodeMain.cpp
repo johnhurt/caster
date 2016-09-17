@@ -7,17 +7,48 @@
 
 #include <iostream>
 #include <core/net/HostResolver.h>
+#include <core/impl/InMemoryStorageHandler.h>
 
 #include "CasterNodeMain.h"
 
+/**
+ * Get the storage manager described by the node configuration
+ */
+StorageManager getStorageManager(CasterNodeConfig const& config) {
+
+    std::vector< of paths for result
+
+    BOOST_FOREACH(std::string directory
+            , config.storage_directories())
+    {
+        if (directory.compare("in-memory")) {
+            return InMemoryStorageHandler();
+        }
+        else {
+
+        }
+    }
+
+}
+
+/**
+ * Create a caster node that contains the given command line configurations
+ */
+CasterNode createCasterNodeFromConfig(CasterNodeConfig const& config)
+{
+    CasterNode result;
+    result.mutable_config()->CopyFrom(config);
+    return result;
+}
 
 CasterNodeMain::CasterNodeMain(CasterNodeConfig config)
 : _exitCode(0)
 , stopRequested(false)
 , shutdownListener(startStopIoService)
-, _config(config)
-, _chatterServer(config, componentIoService)
+, _localNode(createCasterNodeFromConfig(config))
+, _chatterServer(componentIoService, _localNode)
 {
+
 }
 
 size_t CasterNodeMain::incrementThreadPoolSize(size_t const &amount)
@@ -57,7 +88,7 @@ void CasterNodeMain::start()
     }
 
     // Start the thread in the background that listens for the shutdown signal
-    ioServiceThread = boost::thread([&](){startStopIoService.run();});
+    ioServiceThread = boost::thread([&](){ startStopIoService.run(); });
 
     incrementThreadPoolSize(20);
 
@@ -71,6 +102,7 @@ void CasterNodeMain::stop()
     stopRequested = true;
 
     std::cerr << std::endl << std::endl << "Exiting..." << std::endl;
+    _chatterServer.stop();
     componentIoService.stop();
 
     componentThreads.join_all();

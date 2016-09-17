@@ -1,0 +1,7 @@
+import "ServiceEndpoint.proto";
+
+/// Representation of the address of a service which might be distributed across
+/// multiple hosts
+message ServiceAddress {
+    repeated ServiceEndpoint endpoint = 1;
+}

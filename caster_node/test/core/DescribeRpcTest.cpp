@@ -5,72 +5,67 @@
 #include <boost/asio.hpp>
 #include <core/CasterNodeOptionParser.h>
 #include <core/CasterNodeMain.h>
-#include <core/net/NetworkEndpoint.h>
+
+#include "TestUtils.hpp"
 
 /**
  * This test class is to make sure the rpc service can listen, deserialize,
  * answer, serialize, and transmit
  */
 
+BOOST_FIXTURE_TEST_SUITE( describeRpcTests, BasicOptionsFixture )
 
-/**
- * Get the basic options for caster_node along with additional options specific
- * for the test
- */
-std::vector<std::string> getBasicCasterOptions(
-        std::vector<std::string> extraOpts) {
+    BOOST_AUTO_TEST_CASE( testDescribeRpcBasic )
+    {
+        CasterNodeConfig config = CasterNodeOptionParser::parseCommandLine(
+                getBasicOptions({}));
 
-    std::vector<std::string> result = { "-s", "-i", "localhost" };
+        CasterNodeMain main(config);
 
-    result.insert(result.end(), extraOpts.begin(), extraOpts.end());
+        main.start();
 
-    return result;
-}
+        DescribeRequest request;
 
-BOOST_AUTO_TEST_CASE( testDescribeRpcBasic )
-{
-    CasterNodeConfig config = CasterNodeOptionParser::parseCommandLine(
-            getBasicCasterOptions({}));
+        request.set_verbose(true);
 
-    CasterNodeMain main(config);
+        DescribeRpcRequest rpcRequest(request);
 
-    main.start();
+        boost::asio::io_service ioService;
+        boost::asio::ip::tcp::socket socket(ioService);
+        boost::asio::ip::tcp::resolver resolver(ioService);
+        boost::asio::connect(socket, resolver.resolve({ config.internal_interface()
+                , std::to_string(config.chatter_port())}));
 
-    DescribeRequest request;
+        boost::asio::write(socket, boost::asio::buffer(&rpcRequest.buffer()[0]
+                , rpcRequest.buffer().size()));
 
-    request.set_verbose(true);
+        MessageBuffer headerBuffer;
+        headerBuffer.resize(TypedMessageUtil::HEADER_LENGTH);
 
-    DescribeRpcRequest rpcRequest(request);
+        boost::asio::read(socket, boost::asio::buffer(&headerBuffer[0]
+                , TypedMessageUtil::HEADER_LENGTH));
 
-    boost::asio::io_service ioService;
-    boost::asio::ip::tcp::socket socket(ioService);
-    boost::asio::ip::tcp::resolver resolver(ioService);
-    boost::asio::connect(socket, resolver.resolve({ config.internal_interface()
-            , std::to_string(config.chatter_port())}));
+        int responseType = TypedMessageUtil::getMessageType(headerBuffer);
+        int responseSubtype = TypedMessageUtil::getMessageSubtype(headerBuffer);
+        int responseSize = TypedMessageUtil::getMessageSize(headerBuffer);
 
-    boost::asio::write(socket, boost::asio::buffer(&rpcRequest.buffer()[0]
-            , rpcRequest.buffer().size()));
+        BOOST_CHECK_EQUAL(MessageType::Describe, responseType);
+        BOOST_CHECK_EQUAL(MessageSubtype::Response, responseSubtype);
 
-    MessageBuffer headerBuffer;
-    headerBuffer.resize(TypedMessageUtil::HEADER_LENGTH);
+        MessageBuffer responseBody;
+        responseBody.resize(responseSize);
 
-    boost::asio::read(socket, boost::asio::buffer(&headerBuffer[0]
-            , TypedMessageUtil::HEADER_LENGTH));
+        boost::asio::read(socket, boost::asio::buffer(&responseBody[0]
+                , responseSize));
 
-    int requestType = TypedMessageUtil::getMessageType(headerBuffer);
-    int requestSubtype = TypedMessageUtil::getMessageSubtype(headerBuffer);
-    int responseSize = TypedMessageUtil::getMessageSize(headerBuffer);
+        DescribeResponse response;
+        response.ParseFromArray(&responseBody[0], responseSize);
 
-    MessageBuffer responseBody;
-    responseBody.resize(responseSize);
+        BOOST_CHECK_EQUAL(response.description()
+                , std::string("Everything is fine"));
+        BOOST_CHECK(response.verbose());
 
-    boost::asio::read(socket, boost::asio::buffer(&responseBody[0]
-            , responseSize));
+        main.stop();
+    }
 
-    DescribeResponse response;
-    response.ParseFromArray(&responseBody[0], responseSize);
-
-    BOOST_CHECK_EQUAL(response.description(), std::string("Everything is fine"));
-    BOOST_CHECK(response.verbose());
-    main.stop();
-}
+BOOST_AUTO_TEST_SUITE_END()

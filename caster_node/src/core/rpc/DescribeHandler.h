@@ -5,7 +5,7 @@
 #ifndef CASTER_NODE_DESCRIBEHANDLER_H
 #define CASTER_NODE_DESCRIBEHANDLER_H
 
-#include "RpcMessageHandler.h"
+#include "RpcMessageHandler.hpp"
 #include "DescribeRequest.pb.h"
 #include "DescribeResponse.pb.h"
 

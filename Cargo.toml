@@ -1,0 +1,14 @@
+[package]
+
+name = "caster"
+version = "0.0.1"
+authors = [ "Kevin Guthrie <kevin.guthrie@gmail.com>" ]
+
+[[bin]]
+
+name = "caster"
+path = "caster/main.rs"
+
+[dependencies]
+
+caster_core = { path = "caster_core" }

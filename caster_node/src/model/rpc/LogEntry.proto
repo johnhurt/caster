@@ -1,0 +1,9 @@
+message LogEntry {
+
+    required int32 term = 1;
+    required int32 index = 2;
+    required int32 commandType = 3;
+    required int32 commandSize = 4;
+    required bytes command = 5;
+
+}

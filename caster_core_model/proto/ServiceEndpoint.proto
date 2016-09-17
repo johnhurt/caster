@@ -1,0 +1,9 @@
+/// Simple representation of a single network endpoint with hostname and port
+message ServiceEndpoint {
+
+    /// Hostname of the endpoint
+    required string hostname = 1;
+
+    /// Port of the endpoint
+    required int32 port = 2;
+}

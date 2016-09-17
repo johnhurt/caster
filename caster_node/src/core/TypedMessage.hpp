@@ -6,13 +6,12 @@
 #define CASTER_NODE_RPCREQUEST_H
 
 #include <vector>
-#include <boost/cstdint.hpp>
 #include <EmptyMessage.pb.h>
+
+#include  "MessageBuffer.h"
 
 #define DEFINE_TYPED_MESSAGE(TypeValue, SubtypeValue, MessageClass, TypeName) \
         typedef TypedMessage<TypeValue, SubtypeValue, MessageClass> TypeName
-
-typedef std::vector<boost::uint8_t> MessageBuffer;
 
 template <int type, int subtype, class MessageClass>
 class TypedMessage

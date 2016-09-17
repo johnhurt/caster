@@ -5,8 +5,9 @@ enum MessageType {
     Empty = 0;
 
     // Info Commands
-    Describe = 100;
+    Describe = 10;
 
-    // Cluster Control Commands
-    JoinLocal = 200;
+    // Raft Commands
+    AppendRaftEntries = 100;
+    RequestRaftVote = 101;
 }

@@ -7,6 +7,7 @@
 
 #include <boost/thread.hpp>
 #include <memory>
+#include <core/raft/RaftNode.h>
 #include "CasterNode.pb.h"
 #include "ChatterServerClient.h"
 
@@ -19,17 +20,23 @@ private:
     boost::asio::io_service& ioService;
     boost::asio::ip::tcp::acceptor acceptor;
     boost::asio::ip::tcp::socket socket;
-    CasterNodeConfig& _currentNodeConfig;
+    CasterNode _localNode;
+    RaftNode raftNode;
 
 
 public:
-    ChatterServer(CasterNodeConfig& currentNodeConfig
-            , boost::asio::io_service& ioService);
+    ChatterServer(boost::asio::io_service& ioService
+            , CasterNode& localNode);
 
     /**
      * Start the caster chatter server
      */
     void start();
+
+    /**
+     * Stop the caster chatter server
+     */
+    void stop();
 
 private:
 

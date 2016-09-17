@@ -1,0 +1,14 @@
+[package]
+
+name = "caster_core"
+version = "0.0.1"
+authors = [ "Kevin Guthrie <kevin.guthrie@gmail.com>" ]
+
+[lib]
+
+name = "caster_core"
+
+[dependencies]
+
+caster_core_model = { path = "../caster_core_model" }
+getopts = "0.2"

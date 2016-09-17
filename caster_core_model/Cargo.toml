@@ -1,0 +1,15 @@
+[package]
+
+name = "caster_core_model"
+version = "0.0.1"
+authors = [ "Kevin Guthrie <kevin.guthrie@gmail.com>" ]
+
+build = "build.rs"
+
+[lib]
+
+name = "caster_core_model"
+
+[dependencies]
+
+protobuf = "1.0.18"

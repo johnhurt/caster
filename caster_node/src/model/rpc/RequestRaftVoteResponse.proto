@@ -1,0 +1,4 @@
+message RequestRaftVoteResponse {
+    required int32 term = 1;
+    required bool voteGranted = 2;
+}

@@ -10,6 +10,10 @@
 #include <MessageSubtype.pb.h>
 #include <DescribeRequest.pb.h>
 #include <DescribeResponse.pb.h>
+#include <AppendRaftEntriesRequest.pb.h>
+#include <AppendRaftEntriesResponse.pb.h>
+#include <RequestRaftVoteRequest.pb.h>
+#include <RequestRaftVoteResponse.pb.h>
 #include <EmptyMessage.pb.h>
 
 #define DEFINE_RPC_MESSAGES(T) \
@@ -19,5 +23,7 @@
                 , T##Response, T##RpcResponse) \
 
 DEFINE_RPC_MESSAGES(Describe);
+DEFINE_RPC_MESSAGES(AppendRaftEntries);
+DEFINE_RPC_MESSAGES(RequestRaftVote);
 
 #endif //CASTER_NODE_CHATTERRPCREQUESTS_H

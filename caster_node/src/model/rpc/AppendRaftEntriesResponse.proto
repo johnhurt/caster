@@ -1,0 +1,4 @@
+message AppendRaftEntriesResponse {
+    required int32 term = 1;
+    required bool success = 2;
+}

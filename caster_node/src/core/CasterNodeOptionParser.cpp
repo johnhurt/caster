@@ -3,6 +3,8 @@
 //
 
 #include "CasterNodeOptionParser.h"
+#include <boost/filesystem.hpp>
+#include <fstream>
 
 /**
  * Convert the string of ports and ranges into a list of explicit integers.
@@ -46,6 +48,68 @@ void parsePortList(std::string const& portListString
             targetList.push_back(currPort);
         }
     }
+}
+
+/**
+ * Parse and validate the configuration given as storage directories.  This
+ * will split up the string on comma and ensure that each directory configured
+ * exists (or can be created) and can be written to
+ */
+void parseAndValidateStorageDirectories(
+        std::string const& storageDirectoriesList
+        , std::vector<std::string>& target)
+{
+    std::vector<std::string> parts;
+    boost::split(parts, storageDirectoriesList, boost::is_any_of(","));
+
+    BOOST_FOREACH(std::string& part, parts)
+    {
+        boost::filesystem::path currPath(part);
+
+        // If this directory doesn't exist, then make it
+        if (!boost::filesystem::exists(currPath)) {
+            try {
+                if (!boost::filesystem::create_directories(currPath)) {
+                    throw po::error(
+                            std::string("Failed to create dir: ") + part);
+                }
+            }
+            catch(boost::filesystem::filesystem_error const& err) {
+                throw po::error(std::string("Failed to create dir: ") + part);
+            }
+        }
+
+        // If the configuration points to a file and not a directory, then
+        // throw
+        if (!boost::filesystem::is_directory(currPath)) {
+            throw po::error(std::string("Configured storage path: ")
+                    + part + std::string(" is not a directory"));
+        }
+
+        // Try to create a new file in the storage directory.
+        try
+        {
+            boost::filesystem::path testFile = currPath.append("0");
+            std::ofstream writeFile;
+            writeFile.exceptions (
+                    std::ifstream::failbit | std::ifstream::badbit );
+            writeFile.open(currPath.string());
+            writeFile.close();
+
+            boost::filesystem::remove(testFile);
+        }
+        catch(std::ifstream::failure &writeErr)
+        {
+            throw po::error(std::string("Configured storage path: ")
+                    + part + std::string(" cannot be written to"));
+        }
+        catch(boost::filesystem::filesystem_error const& err)
+        {
+            throw po::error(std::string("Configured storage path: ")
+                    + part + std::string(" cannot be written to"));
+        }
+    }
+
 }
 
 /**
@@ -111,6 +175,10 @@ CasterNodeConfig CasterNodeOptionParser::parseCommandLine(int argc, char **argv)
 
     std::vector<int> ownedPorts;
 
+    std::string storageDirsStr;
+
+    std::vector<std::string> storageDirs;
+
     // Describe the set of options that can be used for configuring this node
     desc.add_options()
             ("help,h", "Prints this info :)")
@@ -140,7 +208,10 @@ CasterNodeConfig CasterNodeOptionParser::parseCommandLine(int argc, char **argv)
                     , po::value<std::string>(&remoteInterface)
                     , "Network Interface to use for communication between "
                             "this node and remote peers.  Defaults to the "
-                            "internal interface");
+                            "internal interface")
+            ("storage-dirs,d"
+                    , po::value<std::string>(&storageDirsStr)->required()
+                    , "Comma separated list of directories to use for storage");
 
     po::variables_map opts;
 
@@ -190,6 +261,8 @@ CasterNodeConfig CasterNodeOptionParser::parseCommandLine(int argc, char **argv)
         }
 
         parsePortList(ownedPortsStr, ownedPorts);
+
+        parseAndValidateStorageDirectories(storageDirsStr, storageDirs);
 
         if (ownedPorts.size() < 9)
         {
